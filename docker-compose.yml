@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: felix
+      MONGO_INITDB_ROOT_PASSWORD: 0412@zeP
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  springboot-app:
+    build: .
+    container_name: springboot-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: mpesa
+      SPRING_DATA_MONGODB_USERNAME: felix
+      SPRING_DATA_MONGODB_PASSWORD: 0412@zeP
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo-data:
