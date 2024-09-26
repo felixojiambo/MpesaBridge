@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class RegisterURL {
+public class RegisterURLRequest {
     @JsonProperty("ShortCode")
     private String shortCode;
 
