@@ -1,15 +1,19 @@
 package com.daraja.mpesa.services;
 import com.daraja.mpesa.config.MpesaConfig;
 import com.daraja.mpesa.dtos.AccessTokenResponse;
+import com.daraja.mpesa.dtos.RegisterURLRequest;
+import com.daraja.mpesa.dtos.RegisterURLResponse;
 import com.daraja.mpesa.utils.HelperUtility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static com.daraja.mpesa.utils.Constants.*;
 
@@ -52,6 +56,39 @@ public class DarajaApiImpl implements DarajaApi {
             }
         } catch (IOException e) {
             log.error(String.format("Could not get access token: %s", e.getLocalizedMessage()));
+            return null;
+        }
+    }
+
+    @Override
+    public RegisterURLResponse registerURL() {
+        AccessTokenResponse accessTokenResponse = getAccessToken();
+
+        RegisterURLRequest registerUrlRequest = new RegisterURLRequest();
+        registerUrlRequest.setConfirmationURL(mpesaConfig.getConfirmationURL());
+        registerUrlRequest.setResponseType(mpesaConfig.getResponseType());
+        registerUrlRequest.setShortCode(mpesaConfig.getShortCode());
+        registerUrlRequest.setValidationURL(mpesaConfig.getValidationURL());
+
+
+        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE,
+                Objects.requireNonNull(HelperUtility.toJson(registerUrlRequest)));
+
+        Request request = new Request.Builder()
+                .url(mpesaConfig.getRegisterUrlEndpoint())
+                .post(body)
+                .addHeader("Authorization", String.format("%s %s", BEARER_AUTH_STRING, accessTokenResponse.getAccessToken()))
+                .build();
+
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+
+            assert response.body() != null;
+            // use Jackson to Decode the ResponseBody ...
+            return objectMapper.readValue(response.body().string(), RegisterURLResponse.class);
+
+        } catch (IOException e) {
+            log.error(String.format("Could not register url -> %s", e.getLocalizedMessage()));
             return null;
         }
     }
