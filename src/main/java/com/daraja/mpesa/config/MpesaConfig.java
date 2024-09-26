@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "mpesa.daraja")
-public class Mpesa {
+public class MpesaConfig {
 
     private String consumerKey;
     private String consumerSecret;
