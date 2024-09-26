@@ -13,6 +13,7 @@ import okhttp3.Response;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import static com.daraja.mpesa.utils.Constants.*;
@@ -71,8 +72,9 @@ public class DarajaApiImpl implements DarajaApi {
         registerUrlRequest.setValidationURL(mpesaConfig.getValidationURL());
 
 
-        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE,
-                Objects.requireNonNull(HelperUtility.toJson(registerUrlRequest)));
+        RequestBody body = RequestBody.create(
+                Objects.requireNonNull(HelperUtility.toJson(registerUrlRequest)).getBytes(StandardCharsets.UTF_8)
+        );
 
         Request request = new Request.Builder()
                 .url(mpesaConfig.getRegisterUrlEndpoint())
