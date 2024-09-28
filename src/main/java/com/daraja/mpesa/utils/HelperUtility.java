@@ -61,7 +61,7 @@ public class HelperUtility {
             byte[] input = initiatorPassword.getBytes(StandardCharsets.UTF_8);
 
             // Load the certificate from the classpath
-            ClassPathResource resource = new ClassPathResource("cert.cer");
+            ClassPathResource resource = new ClassPathResource("SandboxCertificate.cer");
             InputStream inputStream = resource.getInputStream();
 
             // Load the public key from the certificate
