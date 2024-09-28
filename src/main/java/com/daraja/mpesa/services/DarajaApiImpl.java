@@ -1,8 +1,6 @@
 package com.daraja.mpesa.services;
 import com.daraja.mpesa.config.MpesaConfig;
-import com.daraja.mpesa.dtos.AccessTokenResponse;
-import com.daraja.mpesa.dtos.RegisterURLRequest;
-import com.daraja.mpesa.dtos.RegisterURLResponse;
+import com.daraja.mpesa.dtos.*;
 import com.daraja.mpesa.utils.HelperUtility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -93,5 +91,30 @@ public class DarajaApiImpl implements DarajaApi {
             log.error(String.format("Could not register url -> %s", e.getLocalizedMessage()));
             return null;
         }
+    }
+
+    @Override
+    public SimulateTransactionResponse simulateC2BTransaction(SimulateTransactionRequest simulateTransactionRequest) {
+        AccessTokenResponse accessTokenResponse = getAccessToken();
+        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE,
+                Objects.requireNonNull(HelperUtility.toJson(simulateTransactionRequest)));
+
+        Request request = new Request.Builder()
+                .url(mpesaConfig.getSimulateTransactionEndpoint())
+                .post(body)
+                .addHeader(AUTHORIZATION_HEADER_STRING, String.format("%s %s", BEARER_AUTH_STRING, accessTokenResponse.getAccessToken()))
+                .build();
+
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+            assert response.body() != null;
+            // use Jackson to Decode the ResponseBody ...
+
+            return objectMapper.readValue(response.body().string(), SimulateTransactionResponse.class);
+        } catch (IOException e) {
+            log.error(String.format("Could not simulate C2B transaction -> %s", e.getLocalizedMessage()));
+            return null;
+        }
+
     }
 }
