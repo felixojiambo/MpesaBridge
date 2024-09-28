@@ -54,7 +54,7 @@ public class DarajaApiImpl implements DarajaApi {
                 return null;
             }
         } catch (IOException e) {
-            log.error(String.format("Could not get access token: %s", e.getLocalizedMessage()));
+            log.error("Could not get access token: {}", e.getLocalizedMessage());
             return null;
         }
     }
@@ -88,7 +88,7 @@ public class DarajaApiImpl implements DarajaApi {
             return objectMapper.readValue(response.body().string(), RegisterURLResponse.class);
 
         } catch (IOException e) {
-            log.error(String.format("Could not register url -> %s", e.getLocalizedMessage()));
+            log.error("Could not register url -> {}", e.getLocalizedMessage());
             return null;
         }
     }
@@ -116,7 +116,7 @@ public class DarajaApiImpl implements DarajaApi {
             // Use Jackson to decode the ResponseBody
             return objectMapper.readValue(response.body().string(), SimulateTransactionResponse.class);
         } catch (IOException e) {
-            log.error(String.format("Could not simulate C2B transaction -> %s", e.getLocalizedMessage()));
+            log.error("Could not simulate C2B transaction -> {}", e.getLocalizedMessage());
             return null;
         }
     }
