@@ -54,7 +54,7 @@ public class DarajaApiImpl implements DarajaApi {
                 return null;
             }
         } catch (IOException e) {
-            log.error(String.format("Could not get access token: %s", e.getLocalizedMessage()));
+            log.error("Could not get access token: {}", e.getLocalizedMessage());
             return null;
         }
     }
@@ -88,7 +88,7 @@ public class DarajaApiImpl implements DarajaApi {
             return objectMapper.readValue(response.body().string(), RegisterURLResponse.class);
 
         } catch (IOException e) {
-            log.error(String.format("Could not register url -> %s", e.getLocalizedMessage()));
+            log.error("Could not register url -> {}", e.getLocalizedMessage());
             return null;
         }
     }
@@ -116,8 +116,56 @@ public class DarajaApiImpl implements DarajaApi {
             // Use Jackson to decode the ResponseBody
             return objectMapper.readValue(response.body().string(), SimulateTransactionResponse.class);
         } catch (IOException e) {
-            log.error(String.format("Could not simulate C2B transaction -> %s", e.getLocalizedMessage()));
+            log.error("Could not simulate C2B transaction -> {}", e.getLocalizedMessage());
             return null;
         }
+    }
+
+    @Override
+    public B2CTransactionSyncResponse performB2CTransaction(InternalB2CTransactionRequest internalB2CTransactionRequest) throws Exception {
+        AccessTokenResponse accessTokenResponse = getAccessToken();
+        log.info(String.format("Access Token: %s", accessTokenResponse.getAccessToken()));
+
+        B2CTransactionRequest b2CTransactionRequest = new B2CTransactionRequest();
+
+        b2CTransactionRequest.setCommandID(internalB2CTransactionRequest.getCommandID());
+        b2CTransactionRequest.setAmount(internalB2CTransactionRequest.getAmount());
+        b2CTransactionRequest.setPartyB(internalB2CTransactionRequest.getPartyB());
+        b2CTransactionRequest.setRemarks(internalB2CTransactionRequest.getRemarks());
+        b2CTransactionRequest.setOccassion(internalB2CTransactionRequest.getOccassion());
+
+        // get the security credentials ...
+        b2CTransactionRequest.setSecurityCredential(HelperUtility.getSecurityCredentials(mpesaConfig.getB2cInitiatorPassword()));
+
+        // Instead of using String.format(), leverage slf4j's parameterized logging
+        log.info("Security Creds: {}", b2CTransactionRequest.getSecurityCredential());
+
+        // set the result url ...
+        b2CTransactionRequest.setResultURL(mpesaConfig.getB2cResultUrl());
+        b2CTransactionRequest.setQueueTimeOutURL(mpesaConfig.getB2cQueueTimeoutUrl());
+        b2CTransactionRequest.setInitiatorName(mpesaConfig.getB2cInitiatorName());
+        b2CTransactionRequest.setPartyA(mpesaConfig.getShortCode());
+
+        RequestBody body = RequestBody.create(
+                Objects.requireNonNull(HelperUtility.toJson(b2CTransactionRequest)),
+                JSON_MEDIA_TYPE
+        );
+        Request request = new Request.Builder()
+                .url(mpesaConfig.getB2cTransactionEndpoint())
+                .post(body)
+                .addHeader(AUTHORIZATION_HEADER_STRING, String.format("%s %s", BEARER_AUTH_STRING, accessTokenResponse.getAccessToken()))
+                .build();
+
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+
+            assert response.body() != null;
+
+            return objectMapper.readValue(response.body().string(), B2CTransactionSyncResponse.class);
+        } catch (IOException e) {
+            log.error("Could not perform B2C transaction -> {}", e.getLocalizedMessage(), e);
+            return null;
+        }
+
     }
 }
