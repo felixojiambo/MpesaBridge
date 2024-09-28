@@ -96,8 +96,12 @@ public class DarajaApiImpl implements DarajaApi {
     @Override
     public SimulateTransactionResponse simulateC2BTransaction(SimulateTransactionRequest simulateTransactionRequest) {
         AccessTokenResponse accessTokenResponse = getAccessToken();
-        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE,
-                Objects.requireNonNull(HelperUtility.toJson(simulateTransactionRequest)));
+
+        // Create request body using the updated method
+        RequestBody body = RequestBody.create(
+                Objects.requireNonNull(HelperUtility.toJson(simulateTransactionRequest)),
+                JSON_MEDIA_TYPE
+        );
 
         Request request = new Request.Builder()
                 .url(mpesaConfig.getSimulateTransactionEndpoint())
@@ -108,13 +112,12 @@ public class DarajaApiImpl implements DarajaApi {
         try {
             Response response = okHttpClient.newCall(request).execute();
             assert response.body() != null;
-            // use Jackson to Decode the ResponseBody ...
 
+            // Use Jackson to decode the ResponseBody
             return objectMapper.readValue(response.body().string(), SimulateTransactionResponse.class);
         } catch (IOException e) {
             log.error(String.format("Could not simulate C2B transaction -> %s", e.getLocalizedMessage()));
             return null;
         }
-
     }
 }
